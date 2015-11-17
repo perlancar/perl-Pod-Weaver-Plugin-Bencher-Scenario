@@ -31,8 +31,15 @@ sub _process_module {
     my $scenario = Bencher::parse_scenario(
         scenario => ${"$package\::scenario"});
 
-    $self->add_text_to_section($document, 'BENCHMARKED MODULES')
-        if @modules;
+    my @modules = Bencher::_get_participant_modules($scenario);
+    if (@modules) {
+        my $pod = join('', map {"L<$_>\n\n"} @modules);
+        $self->add_text_to_section(
+            $document, $pod, 'BENCHMARKED MODULES',
+            {
+                after_section => 'SYNOPSIS',
+            });
+    }
 
     $self->log(["Generated POD for '%s'", $filename]);
 }
