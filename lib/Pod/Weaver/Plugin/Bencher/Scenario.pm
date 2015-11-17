@@ -70,3 +70,5 @@ In your C<weaver.ini>:
 
 
 =head1 DESCRIPTION
+
+This plugin is to be used when building C<Bencher::Scenario::*> modules.
