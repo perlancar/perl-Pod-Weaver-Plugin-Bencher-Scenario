@@ -1,5 +1,6 @@
 Revision history for Pod-Weaver-Plugin-Bencher-Scenario
 
-0.01    2015-11-17 (PERLANCAR) (unreleased)
+0.01    2015-11-17 (PERLANCAR)
 
-        - First release.
+        - First, early release. Currently only inserts "BENCHMARKED MODULES"
+          section.
