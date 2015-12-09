@@ -41,6 +41,16 @@ sub _process_module {
             });
     }
 
+    # XXX if each participant is a unique module, then list with BENCHMARKED
+    # MODULES as above. if there is a module which has two+ participants, list
+    # like: *) L<Foo::Bar>'s C<routine1()>; *) C<Foo::Bar>'s C<routine2()>.
+
+    # XXX add section: BENCHMARK RESULTS (platform info + bench results + module
+    # startup results, or perhaps module startup is put under BENCHMARK RESULTS
+    # (MODULE STARTUP))
+
+    # XXX add scenario's description to DESCRIPTION if DESCRIPTION is not set
+
     $self->log(["Generated POD for '%s'", $filename]);
 }
 
