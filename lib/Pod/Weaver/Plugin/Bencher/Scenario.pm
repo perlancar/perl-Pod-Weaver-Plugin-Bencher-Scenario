@@ -162,10 +162,52 @@ sub _process_module {
                 after_section => 'SYNOPSIS',
                 before_section => ['SAMPLE BENCHMARK RESULTS', 'DESCRIPTION'],
             });
-        # XXX if each participant is a unique module, then list with BENCHMARKED
-        # MODULES as above. if there is a module which has two+ participants,
-        # list like: *) L<Foo::Bar>'s C<routine1()>; *) C<Foo::Bar>'s
-        # C<routine2()>.
+    }
+
+    # add Benchmark Participants section
+    {
+        my @pod;
+        my $res = Bencher::bencher(
+            action => 'list-participants',
+            scenario_module => $scenario_name,
+            detail => 1,
+        );
+        push @pod, "=over\n\n";
+        my $i = -1;
+        for my $p (@{ $res->[2] }) {
+            $i++;
+            my $p0 = $scenario->{participants}[$i];
+            push @pod, "=item * ", ($p->{name} // ''), " ($p->{type})",
+                ($p->{include_by_default} ? "" : " (not included by default)"),
+                "\n\n";
+            if ($p0->{summary}) {
+                push @pod, $p0->{summary}, ".\n\n";
+            }
+            if ($p->{cmdline}) {
+                push @pod, "Command line:\n\n", " $p->{cmdline}\n\n";
+            } elsif ($p0->{fcall_template}) {
+                my $val = $p0->{fcall_template}; $val =~ s/^/ /gm;
+                push @pod, "Function call template:\n\n", $val, "\n\n";
+            } elsif ($p0->{code_template}) {
+                my $val = $p0->{code_template}; $val =~ s/^/ /gm;
+                push @pod, "Code template:\n\n", $val, "\n\n";
+            } elsif ($p->{module}) {
+                push @pod, "L<$p->{module}>";
+                if ($p->{function}) {
+                    push @pod, "::$p->{function}";
+                }
+                push @pod, "\n\n";
+            }
+            push @pod, "\n\n";
+        }
+        push @pod, "=back\n\n";
+
+        $self->add_text_to_section(
+            $document, join("", @pod), 'BENCHMARK PARTICIPANTS',
+            {
+                after_section => ['BENCHMARKED MODULES'],
+                before_section => ['SAMPLE BENCHMARK RESULTS'],
+            });
     }
 
     $self->log(["Generated POD for '%s'", $filename]);
