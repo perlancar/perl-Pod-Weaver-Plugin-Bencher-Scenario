@@ -11,6 +11,15 @@ with 'Pod::Weaver::Role::Section';
 use Perinci::Result::Format::Lite;
 use Bencher;
 
+sub __ver_or_vers {
+    my $v = shift;
+    if (ref($v) eq 'ARRAY') {
+        return join(", ", @$v);
+    } else {
+        return $v;
+    }
+}
+
 sub _md2pod {
     require Markdown::To::POD;
 
@@ -90,52 +99,37 @@ sub _process_module {
 
     my @modules = Bencher::_get_participant_modules($scenario);
 
-    # add Benchmarked Modules section
-    {
-        last unless @modules;
-        my $pod = join('', map {"L<$_>\n\n"} @modules);
-        $self->add_text_to_section(
-            $document, $pod, 'BENCHMARKED MODULES',
-            {
-                after_section => 'SYNOPSIS',
-                before_section => 'DESCRIPTION',
-            });
-        # XXX if each participant is a unique module, then list with BENCHMARKED
-        # MODULES as above. if there is a module which has two+ participants,
-        # list like: *) L<Foo::Bar>'s C<routine1()>; *) C<Foo::Bar>'s
-        # C<routine2()>.
-    }
-
     # add Sample Benchmark Results section
+    my ($bench_res, $fres, $f2res);
     {
         my @pod;
-        my ($res, $fres, $f2res);
 
-        $res = Bencher::bencher(
+        $bench_res = Bencher::bencher(
             action => 'bench',
             scenario_module => $scenario_name,
         );
-        $fres = Bencher::format_result($res);
-        $f2res = Perinci::Result::Format::Lite::format($res, 'text-pretty');
+        $fres = Bencher::format_result($bench_res);
+        $f2res = Perinci::Result::Format::Lite::format($fres, 'text-pretty');
         $f2res =~ s/^/ /gm;
 
-        my $num_cores = $res->[3]{'func.cpu_info'}[0]{number_of_cores};
+        my $num_cores = $bench_res->[3]{'func.cpu_info'}[0]{number_of_cores};
         push @pod, "Run on: ",
-            "CPU: I<< ", $res->[3]{'func.cpu_info'}[0]{name}, " ($num_cores cores) >>, ",
-            "OS: I<< ", $res->[3]{'func.platform_info'}{osname}, " ", $res->[3]{'func.platform_info'}{oslabel}, " version ", $res->[3]{'func.platform_info'}{osvers}, " >>, ",
-            "OS kernel: I<< ", $res->[3]{'func.platform_info'}{kname}, " version ", $res->[3]{'func.platform_info'}{kvers}, " >>",
+            "perl: I<< ", __ver_or_vers($bench_res->[3]{'func.module_versions'}{perl}), " >>, ",
+            "CPU: I<< ", $bench_res->[3]{'func.cpu_info'}[0]{name}, " ($num_cores cores) >>, ",
+            "OS: I<< ", $bench_res->[3]{'func.platform_info'}{osname}, " ", $bench_res->[3]{'func.platform_info'}{oslabel}, " version ", $bench_res->[3]{'func.platform_info'}{osvers}, " >>, ",
+            "OS kernel: I<< ", $bench_res->[3]{'func.platform_info'}{kname}, " version ", $bench_res->[3]{'func.platform_info'}{kvers}, " >>",
             ".\n\n";
 
         push @pod, "Benchmark with default option:\n\n", $f2res, "\n\n";
 
         if (@modules && !$scenario->{module_startup}) {
-            $res = Bencher::bencher(
+            $bench_res = Bencher::bencher(
                 action => 'bench',
                 module_startup => 1,
                 scenario_module => $scenario_name,
             );
-            $fres = Bencher::format_result($res);
-            $f2res = Perinci::Result::Format::Lite::format($res, 'text-pretty');
+            $fres = Bencher::format_result($bench_res);
+            $f2res = Perinci::Result::Format::Lite::format($fres, 'text-pretty');
             $f2res =~ s/^/ /gm;
             push @pod, "Benchmark module startup overhead:\n\n", $f2res, "\n\n";
         }
@@ -146,6 +140,32 @@ sub _process_module {
                 after_section => ['BENCHMARKED MODULES', 'SYNOPSIS'],
                 before_section => 'DESCRIPTION',
             });
+    }
+
+    # add Benchmarked Modules section
+    {
+        last unless @modules;
+        my @pod;
+
+        for my $mod (@modules) {
+            push @pod, "L<$mod>";
+            my $v = $bench_res->[3]{'func.module_versions'}{$mod};
+            if ($v) {
+                push @pod, " ", __ver_or_vers($v);
+            }
+            push @pod, "\n\n";
+        }
+
+        $self->add_text_to_section(
+            $document, join("", @pod), 'BENCHMARKED MODULES',
+            {
+                after_section => 'SYNOPSIS',
+                before_section => ['SAMPLE BENCHMARK RESULTS', 'DESCRIPTION'],
+            });
+        # XXX if each participant is a unique module, then list with BENCHMARKED
+        # MODULES as above. if there is a module which has two+ participants,
+        # list like: *) L<Foo::Bar>'s C<routine1()>; *) C<Foo::Bar>'s
+        # C<routine2()>.
     }
 
     $self->log(["Generated POD for '%s'", $filename]);
