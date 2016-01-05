@@ -78,10 +78,12 @@ sub _process_module {
     }
 
     # add Description section
-    if ($scenario->{description}) {
+    {
         my @pod;
 
-        push @pod, $self->_md2pod($scenario->{description});
+        push @pod, $self->_md2pod($scenario->{description})
+            if $scenario->{description};
+
         # blurb about Bencher
         push @pod, "Packaging a benchmark script as a Bencher scenario makes ",
             "it convenient to include/exclude/add participants/datasets (either ",
