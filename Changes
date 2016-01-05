@@ -1,5 +1,12 @@
 Revision history for Pod-Weaver-Plugin-Bencher-Scenario
 
+0.03    2016-01-05 (PERLANCAR)
+
+	- Add Benchmark Participants section.
+
+	- Show perl & modules' versions.
+
+
 0.02    2016-01-05 (PERLANCAR)
 
         - Add SAMPLE BENCHMARK RESULTS section.
