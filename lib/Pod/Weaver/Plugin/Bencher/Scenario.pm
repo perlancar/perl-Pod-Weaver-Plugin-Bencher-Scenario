@@ -125,12 +125,12 @@ sub _process_module {
         push @pod, "Benchmark with default option:\n\n", $f2res, "\n\n";
 
         if (@modules && !$scenario->{module_startup}) {
-            $bench_res = Bencher::bencher(
+            my $bench_res2 = Bencher::bencher(
                 action => 'bench',
                 module_startup => 1,
                 scenario_module => $scenario_name,
             );
-            $fres = Bencher::format_result($bench_res);
+            $fres = Bencher::format_result($bench_res2);
             $f2res = Perinci::Result::Format::Lite::format($fres, 'text-pretty');
             $f2res =~ s/^/ /gm;
             push @pod, "Benchmark module startup overhead:\n\n", $f2res, "\n\n";
@@ -146,6 +146,15 @@ sub _process_module {
 
     # add Benchmarked Modules section
     {
+        my @modules = @modules;
+        # add from scenario's modules property
+        if ($scenario->{modules}) {
+            for my $mod (keys %{ $scenario->{modules} }) {
+                push @modules, $mod unless grep {$mod eq $_} @modules;
+            }
+            @modules = sort @modules;
+        }
+
         last unless @modules;
         my @pod;
 
