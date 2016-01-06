@@ -1,5 +1,14 @@
 Revision history for Pod-Weaver-Plugin-Bencher-Scenario
 
+0.04    2016-01-06 (PERLANCAR)
+
+	- Add modules that are listed only in scenario's 'modules' property
+	  to BENCHMARKED MODULES.
+
+	- Add blurb on Bencher in Description section even though there is
+	  no scenario's description.
+
+
 0.03    2016-01-05 (PERLANCAR)
 
 	- Add Benchmark Participants section.
