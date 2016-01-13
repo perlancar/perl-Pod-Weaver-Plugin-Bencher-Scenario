@@ -238,7 +238,7 @@ sub weave_section {
 }
 
 1;
-# ABSTRACT: Put various information from scenario into POD
+# ABSTRACT: Plugin to use when building Bencher::Scenario::* distribution
 
 =for Pod::Coverage ^(weave_section)$
 
@@ -251,4 +251,27 @@ In your C<weaver.ini>:
 
 =head1 DESCRIPTION
 
-This plugin is to be used when building C<Bencher::Scenario::*> modules.
+This plugin is to be used when building C<Bencher::Scenario::*> distribution.
+Currently it does the following:
+
+=over
+
+=item * Add a Synopsis section (if doesn't already exist) containing a few examples on how to use the scenario
+
+=item * Add a description about Bencher in the Description section
+
+=item * Add a Benchmark Participants section containing list of participants from the scenario
+
+=item * Add a Sample Benchmark Results containing result from a bencher run
+
+Both normal benchmark and a separate module startup benchmark (if eligible) are
+run and shown.
+
+=item * Add a Benchmarked Modules section containing list of benchmarked modules (if any) from the scenario and their versions
+
+=back
+
+
+=head1 SEE ALSO
+
+L<Dist::Zilla::Plugin::Bencher::Scenario>
