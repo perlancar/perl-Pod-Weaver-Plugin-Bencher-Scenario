@@ -198,7 +198,7 @@ sub _process_module {
         last unless @modules;
         my @pod;
 
-        push @pod, qq(Version numbers shown below are the versions used when getting the L</"SAMPLE BENCHMARK RESULTS>.\n\n);
+        push @pod, qq(Version numbers shown below are the versions used when getting the L</"SAMPLE BENCHMARK RESULTS">.\n\n);
 
         for my $mod (@modules) {
             push @pod, "L<$mod>";
