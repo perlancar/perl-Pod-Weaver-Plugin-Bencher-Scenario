@@ -1,5 +1,10 @@
 Revision history for Pod-Weaver-Plugin-Bencher-Scenario
 
+0.07    2016-01-19 (PERLANCAR)
+
+	- Fix command shown in benchmark sample results.
+
+
 0.06    2016-01-19 (PERLANCAR)
 
         - Add option 'sample_bench' to allow rendering multiple results.
