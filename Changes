@@ -1,5 +1,11 @@
 Revision history for Pod-Weaver-Plugin-Bencher-Scenario
 
+0.08    2016-01-20 (PERLANCAR)
+
+	- Show bencher commands used when benchmarking with default options
+	  and benchmarking module startup overhead.
+
+
 0.07    2016-01-19 (PERLANCAR)
 
 	- Fix command shown in benchmark sample results.
