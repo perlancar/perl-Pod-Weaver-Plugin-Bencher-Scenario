@@ -298,7 +298,7 @@ sub weave_section {
 1;
 # ABSTRACT: Plugin to use when building Bencher::Scenario::* distribution
 
-=for Pod::Coverage ^(weave_section)$
+=for Pod::Coverage .*
 
 =head1 SYNOPSIS
 
