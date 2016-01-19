@@ -1,5 +1,12 @@
 Revision history for Pod-Weaver-Plugin-Bencher-Scenario
 
+0.09    2016-01-20 (PERLANCAR)
+
+	- Show participants' & datasets' tags in POD.
+
+	- Fix getting module versions from benchmark results, derp.
+
+
 0.08    2016-01-20 (PERLANCAR)
 
 	- Show bencher commands used when benchmarking with default options
