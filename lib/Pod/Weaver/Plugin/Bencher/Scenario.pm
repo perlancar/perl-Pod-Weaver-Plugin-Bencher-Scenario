@@ -13,7 +13,6 @@ has sample_bench => (is=>'rw');
 sub mvp_multivalue_args { qw(sample_bench) }
 
 use Bencher;
-use List::MoreUtils qw(firstidx);
 use Perinci::Sub::ConvertArgs::Argv qw(convert_args_to_argv);
 use String::ShellQuote;
 
@@ -201,8 +200,14 @@ sub _process_module {
 
         for my $mod (@modules) {
             push @pod, "L<$mod>";
-            my $v = firstidx {$_->[3]{'func.module_versions'}{$mod}} @bench_res;
-            if ($v) {
+            my $v;
+            for (@bench_res) {
+                if (defined $_->[3]{'func.module_versions'}{$mod}) {
+                    $v = $_->[3]{'func.module_versions'}{$mod};
+                    last;
+                }
+            }
+            if (defined $v) {
                 push @pod, " ", __ver_or_vers($v);
             }
             push @pod, "\n\n";
