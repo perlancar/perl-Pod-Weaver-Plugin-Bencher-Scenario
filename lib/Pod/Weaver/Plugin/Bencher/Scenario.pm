@@ -135,7 +135,7 @@ sub _process_module {
             }
         } else {
             $sample_benches = [
-                {title=>"Benchmark with default options (C<< bencher -m $scenario_name>>)", args=>{}},
+                {title=>"Benchmark with default options (C<< bencher -m $scenario_name >>)", args=>{}},
             ];
         }
 
