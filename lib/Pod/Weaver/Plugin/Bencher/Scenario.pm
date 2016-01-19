@@ -102,7 +102,7 @@ sub _process_module {
     my @modules = Bencher::_get_participant_modules($scenario);
 
     # add Sample Benchmark Results section
-    my ($bench_res, $fres, $f2res);
+    my ($bench_res, $fres);
     {
         my @pod;
 
@@ -111,8 +111,7 @@ sub _process_module {
             scenario_module => $scenario_name,
         );
         $fres = Bencher::format_result($bench_res);
-        $f2res = Perinci::Result::Format::Lite::format($fres, 'text-pretty');
-        $f2res =~ s/^/ /gm;
+        $fres =~ s/^/ /gm;
 
         my $num_cores = $bench_res->[3]{'func.cpu_info'}[0]{number_of_cores};
         push @pod, "Run on: ",
@@ -122,7 +121,7 @@ sub _process_module {
             "OS kernel: I<< ", $bench_res->[3]{'func.platform_info'}{kname}, " version ", $bench_res->[3]{'func.platform_info'}{kvers}, " >>",
             ".\n\n";
 
-        push @pod, "Benchmark with default option:\n\n", $f2res, "\n\n";
+        push @pod, "Benchmark with default option:\n\n", $fres, "\n\n";
 
         if (@modules && !$scenario->{module_startup}) {
             my $bench_res2 = Bencher::bencher(
@@ -131,9 +130,8 @@ sub _process_module {
                 scenario_module => $scenario_name,
             );
             $fres = Bencher::format_result($bench_res2);
-            $f2res = Perinci::Result::Format::Lite::format($fres, 'text-pretty');
-            $f2res =~ s/^/ /gm;
-            push @pod, "Benchmark module startup overhead:\n\n", $f2res, "\n\n";
+            $fres =~ s/^/ /gm;
+            push @pod, "Benchmark module startup overhead:\n\n", $fres, "\n\n";
         }
 
         $self->add_text_to_section(
