@@ -236,7 +236,7 @@ sub _process_module {
             my $p0 = $scenario->{participants}[$i];
             push @pod, "=item * ", ($p->{name} // ''), " ($p->{type})",
                 ($p->{include_by_default} ? "" : " (not included by default)");
-            push @pod, " [".join(", ", @{$p->{tags}})."]" if $p->{tags};
+            push @pod, " [".join(", ", @{$p0->{tags}})."]" if $p0->{tags};
             push @pod, "\n\n";
             if ($p0->{summary}) {
                 push @pod, $p0->{summary}, ".\n\n";
