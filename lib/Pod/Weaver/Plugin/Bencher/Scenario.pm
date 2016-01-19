@@ -8,8 +8,14 @@ use Moose;
 with 'Pod::Weaver::Role::AddTextToSection';
 with 'Pod::Weaver::Role::Section';
 
-use Perinci::Result::Format::Lite;
+has sample_bench => (is=>'rw');
+
+sub mvp_multivalue_args { qw(sample_bench) }
+
 use Bencher;
+use List::MoreUtils qw(firstidx);
+use Perinci::Sub::ConvertArgs::Argv qw(convert_args_to_argv);
+use String::ShellQuote;
 
 sub __ver_or_vers {
     my $v = shift;
@@ -102,26 +108,61 @@ sub _process_module {
     my @modules = Bencher::_get_participant_modules($scenario);
 
     # add Sample Benchmark Results section
-    my ($bench_res, $fres);
+    my @bench_res;
     {
+        my $fres;
         my @pod;
 
-        $bench_res = Bencher::bencher(
-            action => 'bench',
-            scenario_module => $scenario_name,
-        );
-        $fres = Bencher::format_result($bench_res);
-        $fres =~ s/^/ /gm;
+        my $sample_benches;
+        if ($self->sample_bench && @{ $self->sample_bench }) {
+            $sample_benches = [];
+            my $i = -1;
+            for (@{ $self->sample_bench }) {
+                $i++;
+                my $res = eval $_;
+                $self->log_fatal(["Invalid sample_bench[$i] specification: %s", $@]) if $@;
 
-        my $num_cores = $bench_res->[3]{'func.cpu_info'}[0]{number_of_cores};
-        push @pod, "Run on: ",
-            "perl: I<< ", __ver_or_vers($bench_res->[3]{'func.module_versions'}{perl}), " >>, ",
-            "CPU: I<< ", $bench_res->[3]{'func.cpu_info'}[0]{name}, " ($num_cores cores) >>, ",
-            "OS: I<< ", $bench_res->[3]{'func.platform_info'}{osname}, " ", $bench_res->[3]{'func.platform_info'}{oslabel}, " version ", $bench_res->[3]{'func.platform_info'}{osvers}, " >>, ",
-            "OS kernel: I<< ", $bench_res->[3]{'func.platform_info'}{kname}, " version ", $bench_res->[3]{'func.platform_info'}{kvers}, " >>",
-            ".\n\n";
+                my $cres = convert_args_to_argv(args => $res->{args}, meta => $Bencher::SPEC{bencher});
+                $self->log_fatal(["Invalid sample_bench[$i] specification: invalid args: %s - %s", $cres->[0], $cres->[1]])
+                    unless $cres->[0] == 200;
+                my $cmd = "C<< bencher ".join(" ", map {shell_quote($_)} @{$cres->[2]})." >>";
+                if ($res->{title}) {
+                    $res->{title} .= " ($cmd)";
+                } else {
+                    $res->{title} = "Benchmark with $cmd";
+                }
+                push @$sample_benches, $res;
+            }
+        } else {
+            $sample_benches = [
+                {title=>"Benchmark with default options", args=>{}},
+            ];
+        }
 
-        push @pod, "Benchmark with default option:\n\n", $fres, "\n\n";
+        my $i = -1;
+        for my $bench (@$sample_benches) {
+            $i++;
+            my $bench_res = Bencher::bencher(
+                action => 'bench',
+                scenario_module => $scenario_name,
+                %{ $bench->{args} },
+            );
+            $fres = Bencher::format_result($bench_res);
+            $fres =~ s/^/ /gm;
+
+            if ($i == 0) {
+                my $num_cores = $bench_res->[3]{'func.cpu_info'}[0]{number_of_cores};
+                push @pod, "Run on: ",
+                    "perl: I<< ", __ver_or_vers($bench_res->[3]{'func.module_versions'}{perl}), " >>, ",
+                    "CPU: I<< ", $bench_res->[3]{'func.cpu_info'}[0]{name}, " ($num_cores cores) >>, ",
+                    "OS: I<< ", $bench_res->[3]{'func.platform_info'}{osname}, " ", $bench_res->[3]{'func.platform_info'}{oslabel}, " version ", $bench_res->[3]{'func.platform_info'}{osvers}, " >>, ",
+                    "OS kernel: I<< ", $bench_res->[3]{'func.platform_info'}{kname}, " version ", $bench_res->[3]{'func.platform_info'}{kvers}, " >>",
+                    ".\n\n";
+            }
+
+            push @pod, "$bench->{title}:\n\n$fres\n\n";
+            push @bench_res, $bench_res;
+        } # for sample_benches
 
         if (@modules && !$scenario->{module_startup}) {
             my $bench_res2 = Bencher::bencher(
@@ -158,7 +199,7 @@ sub _process_module {
 
         for my $mod (@modules) {
             push @pod, "L<$mod>";
-            my $v = $bench_res->[3]{'func.module_versions'}{$mod};
+            my $v = firstidx {$_->[3]{'func.module_versions'}{$mod}} @bench_res;
             if ($v) {
                 push @pod, " ", __ver_or_vers($v);
             }
