@@ -135,7 +135,7 @@ sub _process_module {
             }
         } else {
             $sample_benches = [
-                {title=>"Benchmark with default options", args=>{}},
+                {title=>"Benchmark with default options (C<< bencher -m $scenario_name>>)", args=>{}},
             ];
         }
 
@@ -174,7 +174,7 @@ sub _process_module {
             );
             $fres = Bencher::format_result($bench_res2);
             $fres =~ s/^/ /gm;
-            push @pod, "Benchmark module startup overhead:\n\n", $fres, "\n\n";
+            push @pod, "Benchmark module startup overhead (C<< bencher -m $scenario_name --module-startup >>):\n\n", $fres, "\n\n";
         }
 
         $self->add_text_to_section(
