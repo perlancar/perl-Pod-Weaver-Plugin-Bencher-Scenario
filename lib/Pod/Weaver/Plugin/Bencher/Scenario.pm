@@ -219,6 +219,25 @@ sub _process_module {
             });
     }
 
+    # add Benchmarked Datasets section
+    {
+        last unless $scenario->{datasets} && @{ $scenario->{datasets} };
+        my @pod;
+
+        push @pod, "=over\n\n";
+        for my $ds (@{ $scenario->{datasets} }) {
+            push @pod, "=item * $ds->{name}\n\n";
+            push @pod, "$ds->{summary}\n\n" if $ds->{summary};
+        }
+        push @pod, "=back\n\n";
+
+        $self->add_text_to_section(
+            $document, join("", @pod), 'BENCHMARK DATASETS',
+            {
+                after_section => 'BENCHMARK PARTICIPANTS',
+            });
+    }
+
     $self->log(["Generated POD for '%s'", $filename]);
 }
 
