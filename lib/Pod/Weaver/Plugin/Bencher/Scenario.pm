@@ -235,8 +235,9 @@ sub _process_module {
             $i++;
             my $p0 = $scenario->{participants}[$i];
             push @pod, "=item * ", ($p->{name} // ''), " ($p->{type})",
-                ($p->{include_by_default} ? "" : " (not included by default)"),
-                "\n\n";
+                ($p->{include_by_default} ? "" : " (not included by default)");
+            push @pod, " [".join(", ", @{$p->{tags}})."]" if $p->{tags};
+            push @pod, "\n\n";
             if ($p0->{summary}) {
                 push @pod, $p0->{summary}, ".\n\n";
             }
@@ -274,7 +275,9 @@ sub _process_module {
 
         push @pod, "=over\n\n";
         for my $ds (@{ $scenario->{datasets} }) {
-            push @pod, "=item * $ds->{name}\n\n";
+            push @pod, "=item * $ds->{name}";
+            push @pod, " [".join(", ", @{$ds->{tags}})."]" if $ds->{tags};
+            push @pod, "\n\n";
             push @pod, "$ds->{summary}\n\n" if $ds->{summary};
         }
         push @pod, "=back\n\n";
