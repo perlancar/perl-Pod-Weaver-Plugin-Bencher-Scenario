@@ -8,6 +8,7 @@ use Moose;
 with 'Pod::Weaver::Role::AddTextToSection';
 with 'Pod::Weaver::Role::Section';
 
+has bench => (is=>'rw', default=>sub{1});
 has sample_bench => (is=>'rw');
 
 sub mvp_multivalue_args { qw(sample_bench) }
@@ -113,7 +114,9 @@ sub _process_module {
         my @pod;
 
         my $sample_benches;
-        if ($self->sample_bench && @{ $self->sample_bench }) {
+        if (!$self->bench) {
+            $sample_benches = [];
+        } elsif ($self->sample_bench && @{ $self->sample_bench }) {
             $sample_benches = [];
             my $i = -1;
             for (@{ $self->sample_bench }) {
@@ -137,6 +140,8 @@ sub _process_module {
                 {title=>"Benchmark with default options (C<< bencher -m $scenario_name >>)", args=>{}},
             ];
         }
+
+        last unless @$sample_benches;
 
         my $i = -1;
         for my $bench (@$sample_benches) {
@@ -340,6 +345,15 @@ run and shown.
 =item * Add a Benchmarked Modules section containing list of benchmarked modules (if any) from the scenario and their versions
 
 =back
+
+
+=head1 OPTIONS
+
+=head2 sample_bench => hash
+
+=head2 bench => bool (default: 1)
+
+Set to 0 if you do not want to produce sample results
 
 
 =head1 SEE ALSO
