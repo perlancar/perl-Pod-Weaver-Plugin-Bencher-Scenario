@@ -14,6 +14,7 @@ has sample_bench => (is=>'rw');
 sub mvp_multivalue_args { qw(sample_bench) }
 
 use Bencher;
+use Data::Dmp;
 use Perinci::Sub::ConvertArgs::Argv qw(convert_args_to_argv);
 use String::ShellQuote;
 
@@ -250,6 +251,9 @@ sub _process_module {
             }
             if ($p->{cmdline}) {
                 push @pod, "Command line:\n\n", " $p->{cmdline}\n\n";
+            } elsif ($p0->{cmdline_template}) {
+                my $c = $p0->{cmdline_template}; $c = dmp($c) if ref($c) eq 'ARRAY';
+                push @pod, "Command line template:\n\n", " $c\n\n";
             } elsif ($p0->{fcall_template}) {
                 my $val = $p0->{fcall_template}; $val =~ s/^/ /gm;
                 push @pod, "Function call template:\n\n", $val, "\n\n";
