@@ -1,5 +1,10 @@
 Revision history for Pod-Weaver-Plugin-Bencher-Scenario
 
+0.13    2016-03-15 (PERLANCAR)
+
+	- Adjust to Bencher 0.38 (backend split to Bencher::Backend).
+
+
 0.12    2016-03-13 (PERLANCAR)
 
 	- Show cmdline_template.
