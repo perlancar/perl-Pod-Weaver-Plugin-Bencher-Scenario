@@ -13,7 +13,7 @@ has sample_bench => (is=>'rw');
 
 sub mvp_multivalue_args { qw(sample_bench) }
 
-use Bencher;
+use Bencher::Backend;
 use Data::Dmp;
 use Perinci::Sub::ConvertArgs::Argv qw(convert_args_to_argv);
 use String::ShellQuote;
@@ -55,7 +55,7 @@ sub _process_module {
         require $package_pm;
     }
 
-    my $scenario = Bencher::parse_scenario(
+    my $scenario = Bencher::Backend::parse_scenario(
         scenario => ${"$package\::scenario"});
 
     my $scenario_name = $package;
@@ -66,7 +66,7 @@ sub _process_module {
         my @pod;
         push @pod, "To run benchmark with default option:\n\n",
             " % bencher -m $scenario_name\n\n";
-        my @pmodules = Bencher::_get_participant_modules($scenario);
+        my @pmodules = Bencher::Backend::_get_participant_modules($scenario);
         if (@pmodules && !$scenario->{module_startup}) {
             push @pod, "To run module startup overhead benchmark:\n\n",
                 " % bencher --module-startup -m $scenario_name\n\n";
@@ -106,7 +106,7 @@ sub _process_module {
             });
     }
 
-    my @modules = Bencher::_get_participant_modules($scenario);
+    my @modules = Bencher::Backend::_get_participant_modules($scenario);
 
     # add Sample Benchmark Results section
     my @bench_res;
@@ -125,7 +125,7 @@ sub _process_module {
                 my $res = eval $_;
                 $self->log_fatal(["Invalid sample_bench[$i] specification: %s", $@]) if $@;
 
-                my $cres = convert_args_to_argv(args => $res->{args}, meta => $Bencher::SPEC{bencher});
+                my $cres = convert_args_to_argv(args => $res->{args}, meta => $Bencher::Backend::SPEC{bencher});
                 $self->log_fatal(["Invalid sample_bench[$i] specification: invalid args: %s - %s", $cres->[0], $cres->[1]])
                     unless $cres->[0] == 200;
                 my $cmd = "C<< bencher -m $scenario_name ".join(" ", map {shell_quote($_)} @{$cres->[2]})." >>";
@@ -148,12 +148,12 @@ sub _process_module {
         for my $bench (@$sample_benches) {
             $i++;
             $self->log(["Running benchmark with args %s", $bench->{args}]);
-            my $bench_res = Bencher::bencher(
+            my $bench_res = Bencher::Backend::bencher(
                 action => 'bench',
                 scenario_module => $scenario_name,
                 %{ $bench->{args} },
             );
-            $fres = Bencher::format_result($bench_res);
+            $fres = Bencher::Backend::format_result($bench_res);
             $fres =~ s/^/ /gm;
 
             if ($i == 0) {
@@ -172,12 +172,12 @@ sub _process_module {
 
         if (@modules && !$scenario->{module_startup}) {
             $self->log(["Running module_startup benchmark"]);
-            my $bench_res2 = Bencher::bencher(
+            my $bench_res2 = Bencher::Backend::bencher(
                 action => 'bench',
                 module_startup => 1,
                 scenario_module => $scenario_name,
             );
-            $fres = Bencher::format_result($bench_res2);
+            $fres = Bencher::Backend::format_result($bench_res2);
             $fres =~ s/^/ /gm;
             push @pod, "Benchmark module startup overhead (C<< bencher -m $scenario_name --module-startup >>):\n\n", $fres, "\n\n";
         }
@@ -232,7 +232,7 @@ sub _process_module {
     # add Benchmark Participants section
     {
         my @pod;
-        my $res = Bencher::bencher(
+        my $res = Bencher::Backend::bencher(
             action => 'list-participants',
             scenario_module => $scenario_name,
             detail => 1,
@@ -323,7 +323,7 @@ sub weave_section {
 
 =head1 SYNOPSIS
 
-In your C<weaver.ini>:
+In your F<weaver.ini>:
 
  [-Bencher::Scenario]
 
@@ -361,5 +361,7 @@ Set to 0 if you do not want to produce sample results
 
 
 =head1 SEE ALSO
+
+L<Bencher>
 
 L<Dist::Zilla::Plugin::Bencher::Scenario>
