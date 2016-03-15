@@ -1,5 +1,12 @@
 Revision history for Pod-Weaver-Plugin-Bencher-Scenario
 
+0.14    2016-03-15 (PERLANCAR)
+
+	- Add configuration: include_module, exclude_module.
+
+	- [Bugfix] metadata must be normalized.
+
+
 0.13    2016-03-15 (PERLANCAR)
 
 	- Adjust to Bencher 0.38 (backend split to Bencher::Backend).
