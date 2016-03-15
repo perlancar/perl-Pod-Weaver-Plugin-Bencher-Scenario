@@ -125,7 +125,8 @@ sub _process_module {
                 my $res = eval $_;
                 $self->log_fatal(["Invalid sample_bench[$i] specification: %s", $@]) if $@;
 
-                my $cres = convert_args_to_argv(args => $res->{args}, meta => $Bencher::Backend::SPEC{bencher});
+                my $meta = normalize_function_metadata($Bencher::Backend::SPEC{bencher});
+                my $cres = convert_args_to_argv(args => $res->{args}, meta => $meta);
                 $self->log_fatal(["Invalid sample_bench[$i] specification: invalid args: %s - %s", $cres->[0], $cres->[1]])
                     unless $cres->[0] == 200;
                 my $cmd = "C<< bencher -m $scenario_name ".join(" ", map {shell_quote($_)} @{$cres->[2]})." >>";
