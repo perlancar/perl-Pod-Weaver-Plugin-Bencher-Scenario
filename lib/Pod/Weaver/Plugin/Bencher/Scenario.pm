@@ -8,13 +8,16 @@ use Moose;
 with 'Pod::Weaver::Role::AddTextToSection';
 with 'Pod::Weaver::Role::Section';
 
+has include_module => (is=>'rw');
+has exclude_module => (is=>'rw');
 has bench => (is=>'rw', default=>sub{1});
 has sample_bench => (is=>'rw');
 
-sub mvp_multivalue_args { qw(sample_bench) }
+sub mvp_multivalue_args { qw(sample_bench include_module exclude_module) }
 
 use Bencher::Backend;
 use Data::Dmp;
+use Perinci::Sub::Normalize qw(normalize_function_metadata);
 use Perinci::Sub::ConvertArgs::Argv qw(convert_args_to_argv);
 use String::ShellQuote;
 
@@ -313,6 +316,12 @@ sub weave_section {
     if ($filename =~ m!^lib/(Bencher/Scenario/.+)\.pm$!) {
         $package = $1;
         $package =~ s!/!::!g;
+        if ($self->include_module && @{ $self->include_module }) {
+            return unless grep {"Bencher::Scenario::$_" eq $package} @{ $self->include_module };
+        }
+        if ($self->exclude_module && @{ $self->exclude_module }) {
+            return if grep {"Bencher::Scenario::$_" eq $package} @{ $self->exclude_module };
+        }
         $self->_process_module($document, $input, $package);
     }
 }
@@ -327,7 +336,7 @@ sub weave_section {
 In your F<weaver.ini>:
 
  [-Bencher::Scenario]
-
+ ;exclude_module=Foo
 
 =head1 DESCRIPTION
 
@@ -354,7 +363,19 @@ run and shown.
 
 =head1 OPTIONS
 
-=head2 sample_bench => hash
+=head2 include_module+ => str
+
+Filter only certain scenario modules. Can be specified multiple times.
+
+=head2 exclude_module+ => str
+
+Exclude certain scenario modules. Can be specified multiple times.
+
+=head2 sample_bench+ => hash
+
+Add a sample benchmark. Value is a hash which can contain these keys: C<title>
+(specify title for the benchmark), C<args> (hash arguments for bencher()). Can
+be specified multiple times.
 
 =head2 bench => bool (default: 1)
 
