@@ -1,5 +1,10 @@
 Revision history for Pod-Weaver-Plugin-Bencher-Scenario
 
+0.15    2016-03-16 (PERLANCAR)
+
+	- Add configuration: bench_startup.
+
+
 0.14    2016-03-15 (PERLANCAR)
 
 	- Add configuration: include_module, exclude_module.
