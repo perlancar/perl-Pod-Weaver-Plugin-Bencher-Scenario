@@ -175,9 +175,7 @@ sub _process_module {
             push @bench_res, $bench_res;
         } # for sample_benches
 
-        last unless $self->bench_startup;
-
-        if (@modules && !$scenario->{module_startup}) {
+        if ($self->bench_startup && @modules && !$scenario->{module_startup}) {
             $self->log(["Running module_startup benchmark"]);
             my $bench_res2 = Bencher::Backend::bencher(
                 action => 'bench',
