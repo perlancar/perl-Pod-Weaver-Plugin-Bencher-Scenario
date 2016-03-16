@@ -11,6 +11,7 @@ with 'Pod::Weaver::Role::Section';
 has include_module => (is=>'rw');
 has exclude_module => (is=>'rw');
 has bench => (is=>'rw', default=>sub{1});
+has bench_startup => (is=>'rw', default=>sub{1});
 has sample_bench => (is=>'rw');
 
 sub mvp_multivalue_args { qw(sample_bench include_module exclude_module) }
@@ -173,6 +174,8 @@ sub _process_module {
             push @pod, "$bench->{title}:\n\n$fres\n\n";
             push @bench_res, $bench_res;
         } # for sample_benches
+
+        last unless $self->bench_startup;
 
         if (@modules && !$scenario->{module_startup}) {
             $self->log(["Running module_startup benchmark"]);
@@ -379,7 +382,12 @@ be specified multiple times.
 
 =head2 bench => bool (default: 1)
 
-Set to 0 if you do not want to produce sample results
+Set to 0 if you do not want to produce any sample benchmarks (including module
+startup benchmark).
+
+=head2 bench_startup => bool (default: 1)
+
+Set to 0 if you do not want to produce module startup sample benchmark.
 
 
 =head1 SEE ALSO
