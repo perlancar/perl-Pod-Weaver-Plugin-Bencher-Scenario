@@ -1,5 +1,10 @@
 Revision history for Pod-Weaver-Plugin-Bencher-Scenario
 
+0.16    2016-04-01 (PERLANCAR)
+
+	- Add --note to bencher.
+
+
 0.15    2016-03-16 (PERLANCAR)
 
 	- Add configuration: bench_startup.
