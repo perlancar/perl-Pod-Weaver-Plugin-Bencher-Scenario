@@ -156,6 +156,7 @@ sub _process_module {
             my $bench_res = Bencher::Backend::bencher(
                 action => 'bench',
                 scenario_module => $scenario_name,
+                note => 'Run by '.__PACKAGE__,
                 %{ $bench->{args} },
             );
             $fres = Bencher::Backend::format_result($bench_res);
@@ -181,6 +182,7 @@ sub _process_module {
                 action => 'bench',
                 module_startup => 1,
                 scenario_module => $scenario_name,
+                note => 'Run by '.__PACKAGE__,
             );
             $fres = Bencher::Backend::format_result($bench_res2);
             $fres =~ s/^/ /gm;
