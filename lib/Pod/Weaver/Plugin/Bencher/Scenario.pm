@@ -18,6 +18,7 @@ sub mvp_multivalue_args { qw(sample_bench include_module exclude_module) }
 
 use Bencher::Backend;
 use Data::Dmp;
+use Perinci::Result::Format::Lite;
 use Perinci::Sub::Normalize qw(normalize_function_metadata);
 use Perinci::Sub::ConvertArgs::Argv qw(convert_args_to_argv);
 use String::ShellQuote;
@@ -39,6 +40,32 @@ sub _md2pod {
     # make sure we add a couple of blank lines in the end
     $pod =~ s/\s+\z//s;
     $pod . "\n\n\n";
+}
+
+sub _html_result {
+    my ($bench_res, $num) = @_;
+    $bench_res = Bencher::Backend::format_result(
+        $bench_res, undef, {render_as_text_table=>0},
+    );
+    $bench_res->[3]{'table.html_class'} = 'sortable-theme-bootstrap';
+    my $fres = Perinci::Result::Format::Lite::format($bench_res, "html");
+    $fres =~ s/(<table)/$1 data-sortable/
+        or die "Can't insert 'data-sortable' to table element";
+    my @res;
+
+    push @res, "=begin HTML\n\n";
+    if ($num == 1) {
+        push @res, join(
+            "",
+            '<script src="https://code.jquery.com/jquery-3.0.0.min.js"></script>', "\n",
+            '<script src="https://cdnjs.cloudflare.com/ajax/libs/sortable/0.8.0/js/sortable.min.js"></script>', "\n",
+            '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sortable/0.8.0/css/sortable-theme-bootstrap.min.css" />', "\n",
+        );
+    }
+    push @res, "\n$fres\n";
+    push @res, q|<script>$(document).ready(function () { $("pre:contains('#table|.$num.q|#')").remove() })</script>|, "\n";
+    push @res, "\n=end HTML\n\n";
+    join('', @res);
 }
 
 sub _process_module {
@@ -114,6 +141,7 @@ sub _process_module {
 
     # add Sample Benchmark Results section
     my @bench_res;
+    my $table_num = 1;
     {
         my $fres;
         my @pod;
@@ -172,7 +200,8 @@ sub _process_module {
                     ".\n\n";
             }
 
-            push @pod, "$bench->{title}:\n\n$fres\n\n";
+            push @pod, "$bench->{title}:\n\n #table$table_num#\n$fres\n\n";
+            push @pod, _html_result($bench_res, $table_num++);
             push @bench_res, $bench_res;
         } # for sample_benches
 
@@ -186,7 +215,8 @@ sub _process_module {
             );
             $fres = Bencher::Backend::format_result($bench_res2);
             $fres =~ s/^/ /gm;
-            push @pod, "Benchmark module startup overhead (C<< bencher -m $scenario_name --module-startup >>):\n\n", $fres, "\n\n";
+            push @pod, "Benchmark module startup overhead (C<< bencher -m $scenario_name --module-startup >>):\n\n #table$table_num#\n", $fres, "\n\n";
+            push @pod, _html_result($bench_res2, $table_num++);
         }
 
         $self->add_text_to_section(
