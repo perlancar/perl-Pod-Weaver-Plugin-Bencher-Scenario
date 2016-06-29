@@ -13,6 +13,7 @@ has exclude_module => (is=>'rw');
 has bench => (is=>'rw', default=>sub{1});
 has bench_startup => (is=>'rw', default=>sub{1});
 has sample_bench => (is=>'rw');
+has gen_html_tables => (is=>'rw', default=>sub{0});
 
 sub mvp_multivalue_args { qw(sample_bench include_module exclude_module) }
 
@@ -201,7 +202,7 @@ sub _process_module {
             }
 
             push @pod, "$bench->{title}:\n\n #table$table_num#\n$fres\n\n";
-            push @pod, _html_result($bench_res, $table_num++);
+            push @pod, _html_result($bench_res, $table_num++) if $self->gen_html_tables;
             push @bench_res, $bench_res;
         } # for sample_benches
 
@@ -216,7 +217,7 @@ sub _process_module {
             $fres = Bencher::Backend::format_result($bench_res2);
             $fres =~ s/^/ /gm;
             push @pod, "Benchmark module startup overhead (C<< bencher -m $scenario_name --module-startup >>):\n\n #table$table_num#\n", $fres, "\n\n";
-            push @pod, _html_result($bench_res2, $table_num++);
+            push @pod, _html_result($bench_res2, $table_num++) if $self->gen_html_tables;
         }
 
         $self->add_text_to_section(
@@ -394,7 +395,7 @@ run and shown.
 =back
 
 
-=head1 OPTIONS
+=head1 CONFIGURATION
 
 =head2 include_module+ => str
 
@@ -418,6 +419,8 @@ startup benchmark).
 =head2 bench_startup => bool (default: 1)
 
 Set to 0 if you do not want to produce module startup sample benchmark.
+
+=head2 gen_html_tables => bool (default: 0)
 
 
 =head1 SEE ALSO
