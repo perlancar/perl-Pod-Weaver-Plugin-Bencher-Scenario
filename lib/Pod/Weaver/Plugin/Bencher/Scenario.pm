@@ -14,6 +14,7 @@ has bench => (is=>'rw', default=>sub{1});
 has bench_startup => (is=>'rw', default=>sub{1});
 has sample_bench => (is=>'rw');
 has gen_html_tables => (is=>'rw', default=>sub{0});
+has result_split_fields => (is=>'rw');
 
 sub mvp_multivalue_args { qw(sample_bench include_module exclude_module) }
 
@@ -188,8 +189,6 @@ sub _process_module {
                 note => 'Run by '.__PACKAGE__,
                 %{ $bench->{args} },
             );
-            $fres = Bencher::Backend::format_result($bench_res);
-            $fres =~ s/^/ /gm;
 
             if ($i == 0) {
                 my $num_cores = $bench_res->[3]{'func.cpu_info'}[0]{number_of_cores};
@@ -201,9 +200,28 @@ sub _process_module {
                     ".\n\n";
             }
 
-            push @pod, "$bench->{title}:\n\n #table$table_num#\n$fres\n\n";
-            push @pod, _html_result($bench_res, $table_num++) if $self->gen_html_tables;
-            push @bench_res, $bench_res;
+            if ($self->result_split_fields) {
+                my $split_bench_res = Bencher::Backend::split_result(
+                    $bench_res, [split /\s*[,;]\s*|\s+/, $self->result_split_fields]);
+                for my $k (0..$#{$split_bench_res}) {
+                    my $split_item = $split_bench_res->[$k];
+                    if ($k == 0) { push @pod, "$bench->{title}:\n\n" }
+                    my $fres = Bencher::Backend::format_result($split_item->[1]);
+                    $fres =~ s/^/ /gm;
+                    push @pod, " #table$table_num#\n", " ", dmp($split_item->[0]), "\n$fres\n";
+                    $table_num++;
+                    push @pod, _html_result($bench_res, $table_num) if $self->gen_html_tables;
+                    push @bench_res, $split_item->[1];
+                }
+                push @pod, "\n";
+            } else {
+                my $fres = Bencher::Backend::format_result($bench_res);
+                $fres =~ s/^/ /gm;
+                push @pod, "$bench->{title}:\n\n #table$table_num#\n$fres\n\n";
+                push @pod, _html_result($bench_res, $table_num) if $self->gen_html_tables;
+                $table_num++;
+                push @bench_res, $bench_res;
+            }
         } # for sample_benches
 
         if ($self->bench_startup && @modules && !$scenario->{module_startup}) {
@@ -217,7 +235,8 @@ sub _process_module {
             $fres = Bencher::Backend::format_result($bench_res2);
             $fres =~ s/^/ /gm;
             push @pod, "Benchmark module startup overhead (C<< bencher -m $scenario_name --module-startup >>):\n\n #table$table_num#\n", $fres, "\n\n";
-            push @pod, _html_result($bench_res2, $table_num++) if $self->gen_html_tables;
+            push @pod, _html_result($bench_res2, $table_num) if $self->gen_html_tables;
+            $table_num++;
         }
 
         $self->add_text_to_section(
@@ -421,6 +440,19 @@ startup benchmark).
 Set to 0 if you do not want to produce module startup sample benchmark.
 
 =head2 gen_html_tables => bool (default: 0)
+
+=head2 result_split_fields => str
+
+If specified, will split result table into multiple tables using the specified
+fields (comma-separated). For example:
+
+ result_split_fields = dataset
+
+or:
+
+ result_split_fields = participant
+
+Note that module startup benchmark result is not split.
 
 
 =head1 SEE ALSO
