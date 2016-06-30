@@ -1,5 +1,14 @@
 Revision history for Pod-Weaver-Plugin-Bencher-Scenario
 
+0.17    2016-06-30 (PERLANCAR)
+
+        - Add configuration: result_split_fields.
+
+        - Add configuration: gen_html_tables (turned off by default because
+          metacpan.org doesn't allow many HTML elements, e.g. <th> or <thead>,
+          not to mention <script>).
+
+
 0.16    2016-04-01 (PERLANCAR)
 
 	- Add --note to bencher.
