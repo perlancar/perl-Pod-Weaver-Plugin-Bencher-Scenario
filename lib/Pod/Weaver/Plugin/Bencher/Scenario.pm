@@ -15,11 +15,13 @@ has bench_startup => (is=>'rw', default=>sub{1});
 has sample_bench => (is=>'rw');
 has gen_html_tables => (is=>'rw', default=>sub{0});
 has result_split_fields => (is=>'rw');
+has chart => (is=>'rw', default=>sub{0});
 
 sub mvp_multivalue_args { qw(sample_bench include_module exclude_module) }
 
 use Bencher::Backend;
 use Data::Dmp;
+use File::Temp;
 use Perinci::Result::Format::Lite;
 use Perinci::Sub::Normalize qw(normalize_function_metadata);
 use Perinci::Sub::ConvertArgs::Argv qw(convert_args_to_argv);
@@ -44,7 +46,7 @@ sub _md2pod {
     $pod . "\n\n\n";
 }
 
-sub _html_result {
+sub __html_result {
     my ($bench_res, $num) = @_;
     $bench_res = Bencher::Backend::format_result(
         $bench_res, undef, {render_as_text_table=>0},
@@ -70,6 +72,37 @@ sub _html_result {
     join('', @res);
 }
 
+sub _gen_chart {
+    my ($self, $tempdir, $input, $pod, $envres, $table_num) = @_;
+
+    my $zilla = $input->{zilla};
+
+    return unless $self->chart;
+
+    $self->log_debug(["Generating chart (table%d) ...", $table_num]);
+    my $output_file = "$tempdir/bencher-result-$table_num.png";
+    my $build_file  = "share/images/bencher-result-$table_num.png";
+    my $chart_res = Bencher::Backend::chart_result(
+        envres      => $envres,
+        title       => "table$table_num",
+        output_file => $output_file,
+        overwrite   => 1,
+    );
+    if ($chart_res->[0] != 200) {
+        $self->log(["Skipped generating chart (table%d): %s", $table_num, $chart_res]);
+    } else {
+        $self->log(["Generated chart (table%d, output file=%s)",
+                    $table_num, $output_file]);
+    }
+
+    push @$pod, "#IMAGE: $build_file\n\n";
+
+    # this is very very dirty. we mark that we have created some chart files in
+    # a temp dir, so Dist::Zilla::Plugin::Bencher::Scenario can add them to the
+    # build
+    $input->{zilla}->{_pwp_bs_tempdir} = $tempdir;
+}
+
 sub _process_module {
     no strict 'refs';
 
@@ -87,6 +120,8 @@ sub _process_module {
         $package_pm .= ".pm";
         require $package_pm;
     }
+
+    my $tempdir = File::Temp::tempdir(CLEANUP=>0);
 
     my $scenario = Bencher::Backend::parse_scenario(
         scenario => ${"$package\::scenario"});
@@ -209,8 +244,9 @@ sub _process_module {
                     my $fres = Bencher::Backend::format_result($split_item->[1]);
                     $fres =~ s/^/ /gm;
                     push @pod, " #table$table_num#\n", " ", dmp($split_item->[0]), "\n$fres\n";
+                    push @pod, __html_result($bench_res, $table_num) if $self->gen_html_tables;
+                    $self->_gen_chart($tempdir, $input, \@pod, $split_item->[1], $table_num);
                     $table_num++;
-                    push @pod, _html_result($bench_res, $table_num) if $self->gen_html_tables;
                     push @bench_res, $split_item->[1];
                 }
                 push @pod, "\n";
@@ -218,7 +254,8 @@ sub _process_module {
                 my $fres = Bencher::Backend::format_result($bench_res);
                 $fres =~ s/^/ /gm;
                 push @pod, "$bench->{title}:\n\n #table$table_num#\n$fres\n\n";
-                push @pod, _html_result($bench_res, $table_num) if $self->gen_html_tables;
+                push @pod, __html_result($bench_res, $table_num) if $self->gen_html_tables;
+                $self->_gen_chart($tempdir, $input, \@pod, $bench_res, $table_num);
                 $table_num++;
                 push @bench_res, $bench_res;
             }
@@ -235,7 +272,8 @@ sub _process_module {
             $fres = Bencher::Backend::format_result($bench_res2);
             $fres =~ s/^/ /gm;
             push @pod, "Benchmark module startup overhead (C<< bencher -m $scenario_name --module-startup >>):\n\n #table$table_num#\n", $fres, "\n\n";
-            push @pod, _html_result($bench_res2, $table_num) if $self->gen_html_tables;
+            push @pod, __html_result($bench_res2, $table_num) if $self->gen_html_tables;
+            $self->_gen_chart($tempdir, $input, \@pod, $bench_res2, $table_num);
             $table_num++;
         }
 
@@ -453,6 +491,18 @@ or:
  result_split_fields = participant
 
 Note that module startup benchmark result is not split.
+
+=head2 chart => bool (default: 0)
+
+Whether to produce chart or not. The chart files will be stored in
+F<share/images/bencher-result-N.png> where I<N> is the table number.
+
+Note that this plugin will produce this snippets:
+
+ # IMAGE: share/images/bencher-result-N.png
+
+and you'll need to add the plugin L<Dist::Zilla::Plugin::InsertDistImage> to
+convert it to actual HTML.
 
 
 =head1 SEE ALSO
