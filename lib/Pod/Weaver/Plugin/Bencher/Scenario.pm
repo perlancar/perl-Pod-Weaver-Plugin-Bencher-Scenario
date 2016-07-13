@@ -121,7 +121,7 @@ sub _process_module {
         require $package_pm;
     }
 
-    my $tempdir = File::Temp::tempdir(CLEANUP=>0);
+    my $tempdir = File::Temp::tempdir(CLEANUP=>1);
 
     my $scenario = Bencher::Backend::parse_scenario(
         scenario => ${"$package\::scenario"});
