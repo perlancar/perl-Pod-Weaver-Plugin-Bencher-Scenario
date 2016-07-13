@@ -1,5 +1,10 @@
 Revision history for Pod-Weaver-Plugin-Bencher-Scenario
 
+0.18    2016-07-13 (PERLANCAR)
+
+        - Add option to generate chart image files (by default off).
+
+
 0.17    2016-06-30 (PERLANCAR)
 
         - Add configuration: result_split_fields.
