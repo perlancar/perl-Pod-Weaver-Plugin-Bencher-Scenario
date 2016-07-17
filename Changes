@@ -1,5 +1,12 @@
 Revision history for Pod-Weaver-Plugin-Bencher-Scenario
 
+0.19    2016-07-17 (PERLANCAR)
+
+	- Provide alternate location in #IMAGE so DZP:InsertDistImage can
+	  work when hosting=data (otherwise, the file in share/images/
+	  won't be found because they are not added to the build yet).
+
+
 0.18    2016-07-13 (PERLANCAR)
 
         - Add option to generate chart image files (by default off).
