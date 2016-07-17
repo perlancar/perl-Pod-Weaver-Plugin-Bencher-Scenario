@@ -95,7 +95,7 @@ sub _gen_chart {
                     $table_num, $output_file]);
     }
 
-    push @$pod, "#IMAGE: $build_file\n\n";
+    push @$pod, "#IMAGE: $build_file|$output_file\n\n";
 
     # this is very very dirty. we mark that we have created some chart files in
     # a temp dir, so Dist::Zilla::Plugin::Bencher::Scenario can add them to the
