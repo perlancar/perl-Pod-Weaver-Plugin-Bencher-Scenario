@@ -1,5 +1,11 @@
 Revision history for Pod-Weaver-Plugin-Bencher-Scenario
 
+0.20    2016-09-25 (PERLANCAR)
+
+	- [ux] Add list of scenario modules at the beginning of Description
+	  section.
+
+
 0.19    2016-07-17 (PERLANCAR)
 
 	- Provide alternate location in #IMAGE so DZP:InsertDistImage can
