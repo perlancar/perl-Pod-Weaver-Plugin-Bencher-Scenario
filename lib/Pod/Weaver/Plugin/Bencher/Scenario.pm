@@ -103,7 +103,7 @@ sub _gen_chart {
     $input->{zilla}->{_pwp_bs_tempdir} = $tempdir;
 }
 
-sub _process_module {
+sub _process_scenario_module {
     no strict 'refs';
 
     my ($self, $document, $input, $package) = @_;
@@ -398,6 +398,57 @@ sub _process_module {
     $self->log(["Generated POD for '%s'", $filename]);
 }
 
+sub _list_my_scenario_modules {
+    my ($self, $input) = @_;
+
+    my @res;
+    for my $file (@{ $input->{zilla}->files }) {
+        my $name = $file->name;
+        next unless $name =~ m!^lib/Bencher/Scenario/!;
+        $name =~ s!^lib/!!; $name =~ s/\.pm$//; $name =~ s!/!::!g;
+        push @res, $name;
+    }
+    @res;
+}
+
+sub _process_scenarios_module {
+    no strict 'refs';
+
+    my ($self, $document, $input, $package) = @_;
+
+    my $filename = $input->{filename};
+
+    # XXX handle dynamically generated module (if there is such thing in the
+    # future)
+    local @INC = ("lib", @INC);
+
+    {
+        my $package_pm = $package;
+        $package_pm =~ s!::!/!g;
+        $package_pm .= ".pm";
+        require $package_pm;
+    }
+
+    # add list of Bencher::Scenario::* modules to Description
+    {
+        my @pod;
+        my @scenario_mods = $self->_list_my_scenario_modules($input);
+        push @pod, "This distribution contains the following L<Bencher> scenario modules:\n\n";
+        push @pod, "=over\n\n";
+        push @pod, "=item * L<$_>\n\n" for @scenario_mods;
+        push @pod, "=back\n\n";
+
+        $self->add_text_to_section(
+            $document, join("", @pod), 'DESCRIPTION',
+            {
+                after_section => ['SYNOPSIS'],
+                top => 1,
+            });
+    }
+
+    $self->log(["Generated POD for '%s'", $filename]);
+}
+
 sub weave_section {
     my ($self, $document, $input) = @_;
 
@@ -405,15 +456,28 @@ sub weave_section {
 
     my $package;
     if ($filename =~ m!^lib/(Bencher/Scenario/.+)\.pm$!) {
-        $package = $1;
-        $package =~ s!/!::!g;
-        if ($self->include_module && @{ $self->include_module }) {
-            return unless grep {"Bencher::Scenario::$_" eq $package} @{ $self->include_module };
+        {
+            $package = $1;
+            $package =~ s!/!::!g;
+            if ($self->include_module && @{ $self->include_module }) {
+                last unless grep {"Bencher::Scenario::$_" eq $package} @{ $self->include_module };
+            }
+            if ($self->exclude_module && @{ $self->exclude_module }) {
+                last if grep {"Bencher::Scenario::$_" eq $package} @{ $self->exclude_module };
+            }
+            $self->_process_scenario_module($document, $input, $package);
         }
-        if ($self->exclude_module && @{ $self->exclude_module }) {
-            return if grep {"Bencher::Scenario::$_" eq $package} @{ $self->exclude_module };
+    }
+    if ($filename =~ m!^lib/(Bencher/Scenarios/.+)\.pm$!) {
+        {
+            # since Bencher::Scenario PW plugin might be called more than once,
+            # we avoid duplicate processing via a state variable
+            state %mem;
+            last if $mem{$filename}++;
+            $package = $1;
+            $package =~ s!/!::!g;
+            $self->_process_scenarios_module($document, $input, $package);
         }
-        $self->_process_module($document, $input, $package);
     }
 }
 
@@ -434,6 +498,8 @@ In your F<weaver.ini>:
 This plugin is to be used when building C<Bencher::Scenario::*> distribution.
 Currently it does the following:
 
+For each C<lib/Bencher/Scenario/*> module files:
+
 =over
 
 =item * Add a Synopsis section (if doesn't already exist) containing a few examples on how to use the scenario
@@ -448,6 +514,14 @@ Both normal benchmark and a separate module startup benchmark (if eligible) are
 run and shown.
 
 =item * Add a Benchmarked Modules section containing list of benchmarked modules (if any) from the scenario and their versions
+
+=back
+
+For each C<lib/Bencher/Scenario/*> module files:
+
+=over
+
+=item * Add list of scenario modules at the beginning of Description section
 
 =back
 
