@@ -217,7 +217,7 @@ sub _process_scenario_module {
         my $i = -1;
         for my $bench (@$sample_benches) {
             $i++;
-            $self->log(["Running benchmark with args %s", $bench->{args}]);
+            $self->log(["Running benchmark of scenario $scenario_name with args %s", $bench->{args}]);
             my $bench_res = Bencher::Backend::bencher(
                 action => 'bench',
                 scenario_module => $scenario_name,
@@ -262,7 +262,7 @@ sub _process_scenario_module {
         } # for sample_benches
 
         if ($self->bench_startup && @modules && !$scenario->{module_startup}) {
-            $self->log(["Running module_startup benchmark"]);
+            $self->log(["Running module_startup benchmark of scenario $scenario_name"]);
             my $bench_res2 = Bencher::Backend::bencher(
                 action => 'bench',
                 module_startup => 1,
