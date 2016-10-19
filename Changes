@@ -1,5 +1,15 @@
 Revision history for Pod-Weaver-Plugin-Bencher-Scenario
 
+0.21    2016-10-19 (PERLANCAR)
+
+        - [Experimental] Create lib/Bencher/ScenarioR/* module files that
+          contain raw benchmark sample results. (Doing this in this Pod::Weaver
+          plugin is a bit too late though, because the generated files won't get
+          weaved. I plan to move the sample benchmarking into
+          Dist::Zilla::Plugin::Bencher::Scenario and pass the result to this
+          plugin).
+
+
 0.20    2016-09-25 (PERLANCAR)
 
 	- [ux] Add list of scenario modules at the beginning of Description
