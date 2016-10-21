@@ -1,5 +1,11 @@
 Revision history for Pod-Weaver-Plugin-Bencher-Scenario
 
+0.22    2016-10-21 (PERLANCAR)
+
+	- Allow sample bench to get result from JSON file instead of
+	  performing bencher().
+
+
 0.21    2016-10-19 (PERLANCAR)
 
         - [Experimental] Create lib/Bencher/ScenarioR/* module files that
