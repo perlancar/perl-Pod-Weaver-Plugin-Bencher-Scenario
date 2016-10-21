@@ -21,7 +21,9 @@ sub mvp_multivalue_args { qw(sample_bench include_module exclude_module) }
 
 use Bencher::Backend;
 use Data::Dmp;
+use File::Slurper qw(read_text);
 use File::Temp;
+use JSON::MaybeXS;
 use Perinci::Result::Format::Lite;
 use Perinci::Sub::Normalize qw(normalize_function_metadata);
 use Perinci::Sub::ConvertArgs::Argv qw(convert_args_to_argv);
@@ -101,6 +103,20 @@ sub _gen_chart {
     # a temp dir, so Dist::Zilla::Plugin::Bencher::Scenario can add them to the
     # build
     $input->{zilla}->{_pwp_bs_tempdir} = $tempdir;
+}
+
+sub __render_run_on {
+    my $bench_res = shift;
+    my $num_cores = $bench_res->[3]{'func.cpu_info'}[0]{number_of_cores};
+    join(
+        "",
+        "Run on: ",
+        "perl: I<< ", __ver_or_vers($bench_res->[3]{'func.module_versions'}{perl}), " >>, ",
+        "CPU: I<< ", $bench_res->[3]{'func.cpu_info'}[0]{name}, " ($num_cores cores) >>, ",
+        "OS: I<< ", $bench_res->[3]{'func.platform_info'}{osname}, " ", $bench_res->[3]{'func.platform_info'}{oslabel}, " version ", $bench_res->[3]{'func.platform_info'}{osvers}, " >>, ",
+        "OS kernel: I<< ", $bench_res->[3]{'func.platform_info'}{kname}, " version ", $bench_res->[3]{'func.platform_info'}{kvers}, " >>",
+        ".",
+    );
 }
 
 sub _process_scenario_module {
@@ -196,16 +212,24 @@ sub _process_scenario_module {
                 my $res = eval $_;
                 $self->log_fatal(["Invalid sample_bench[$i] specification: %s", $@]) if $@;
 
-                my $meta = normalize_function_metadata($Bencher::Backend::SPEC{bencher});
-                my $cres = convert_args_to_argv(args => $res->{args}, meta => $meta);
-                $self->log_fatal(["Invalid sample_bench[$i] specification: invalid args: %s - %s", $cres->[0], $cres->[1]])
-                    unless $cres->[0] == 200;
-                my $cmd = "C<< bencher -m $scenario_name ".join(" ", map {shell_quote($_)} @{$cres->[2]})." >>";
-                if ($res->{title}) {
-                    $res->{title} .= " ($cmd)";
+                if ($res->{args}) {
+                    my $meta = normalize_function_metadata($Bencher::Backend::SPEC{bencher});
+                    my $cres = convert_args_to_argv(args => $res->{args}, meta => $meta);
+                    $self->log_fatal(["Invalid sample_bench[$i] specification: invalid args: %s - %s", $cres->[0], $cres->[1]])
+                        unless $cres->[0] == 200;
+                    my $cmd = "C<< bencher -m $scenario_name ".join(" ", map {shell_quote($_)} @{$cres->[2]})." >>";
+                    if ($res->{title}) {
+                        $res->{title} .= " ($cmd)";
+                    } else {
+                        $res->{title} = "Benchmark with $cmd";
+                    }
+                } elsif ($res->{file}) {
+                    $res->{result} = decode_json(read_text($res->{file}));
+                    $res->{title} //= "(no title)";
                 } else {
-                    $res->{title} = "Benchmark with $cmd";
+                    $self->log_fatal(["Invalid sample_bench[$i] specification: no args/file specified"]);
                 }
+
                 push @$sample_benches, $res;
             }
         } else {
@@ -217,24 +241,32 @@ sub _process_scenario_module {
         last unless @$sample_benches;
 
         my $i = -1;
+        my $first_run_on;
         for my $bench (@$sample_benches) {
             $i++;
-            $self->log(["Running benchmark of scenario $scenario_name with args %s", $bench->{args}]);
-            my $bench_res = Bencher::Backend::bencher(
-                action => 'bench',
-                scenario_module => $scenario_name,
-                note => 'Run by '.__PACKAGE__,
-                %{ $bench->{args} },
-            );
+
+            my $bench_res;
+            if ($bench->{result}) {
+                $bench_res = $bench->{result};
+                if ($i > 0) {
+                    my $run_on = __render_run_on($bench_res);
+                    if ($run_on ne $first_run_on) {
+                        $bench->{title} .= " ($run_on)";
+                    }
+                }
+            } else {
+                $self->log(["Running benchmark of scenario $scenario_name with args %s", $bench->{args}]);
+                $bench_res = Bencher::Backend::bencher(
+                    action => 'bench',
+                    scenario_module => $scenario_name,
+                    note => 'Run by '.__PACKAGE__,
+                    %{ $bench->{args} },
+                );
+            }
 
             if ($i == 0) {
-                my $num_cores = $bench_res->[3]{'func.cpu_info'}[0]{number_of_cores};
-                push @pod, "Run on: ",
-                    "perl: I<< ", __ver_or_vers($bench_res->[3]{'func.module_versions'}{perl}), " >>, ",
-                    "CPU: I<< ", $bench_res->[3]{'func.cpu_info'}[0]{name}, " ($num_cores cores) >>, ",
-                    "OS: I<< ", $bench_res->[3]{'func.platform_info'}{osname}, " ", $bench_res->[3]{'func.platform_info'}{oslabel}, " version ", $bench_res->[3]{'func.platform_info'}{osvers}, " >>, ",
-                    "OS kernel: I<< ", $bench_res->[3]{'func.platform_info'}{kname}, " version ", $bench_res->[3]{'func.platform_info'}{kvers}, " >>",
-                    ".\n\n";
+                $first_run_on = __render_run_on($bench_res);
+                push @pod, $first_run_on, "\n\n";
             }
 
             if ($self->result_split_fields) {
@@ -590,8 +622,9 @@ Exclude certain scenario modules. Can be specified multiple times.
 =head2 sample_bench+ => hash
 
 Add a sample benchmark. Value is a hash which can contain these keys: C<title>
-(specify title for the benchmark), C<args> (hash arguments for bencher()). Can
-be specified multiple times.
+(specify title for the benchmark), C<args> (hash arguments for bencher()) or
+C<file> (instead of running bencher(), use the result from JSON file). Can be
+specified multiple times.
 
 =head2 bench => bool (default: 1)
 
