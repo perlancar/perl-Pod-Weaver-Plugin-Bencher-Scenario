@@ -196,7 +196,7 @@ sub _process_scenario_module {
 
     # add Sample Benchmark Results section
     my @bench_res;
-    my $table_num = 1;
+    my $table_num = 0;
     {
         my $fres;
         my @pod;
@@ -277,20 +277,20 @@ sub _process_scenario_module {
                     if ($k == 0) { push @pod, "$bench->{title}:\n\n" }
                     my $fres = Bencher::Backend::format_result($split_item->[1]);
                     $fres =~ s/^/ /gm;
+                    $table_num++;
                     push @pod, " #table$table_num#\n", " ", dmp($split_item->[0]), "\n$fres\n";
                     push @pod, __html_result($bench_res, $table_num) if $self->gen_html_tables;
                     $self->_gen_chart($tempdir, $input, \@pod, $split_item->[1], $table_num);
-                    $table_num++;
                     push @bench_res, $split_item->[1];
                 }
                 push @pod, "\n";
             } else {
                 my $fres = Bencher::Backend::format_result($bench_res);
                 $fres =~ s/^/ /gm;
+                $table_num++;
                 push @pod, "$bench->{title}:\n\n #table$table_num#\n$fres\n\n";
                 push @pod, __html_result($bench_res, $table_num) if $self->gen_html_tables;
                 $self->_gen_chart($tempdir, $input, \@pod, $bench_res, $table_num);
-                $table_num++;
                 push @bench_res, $bench_res;
             }
         } # for sample_benches
@@ -305,10 +305,14 @@ sub _process_scenario_module {
             );
             $fres = Bencher::Backend::format_result($bench_res2);
             $fres =~ s/^/ /gm;
+            $table_num++;
             push @pod, "Benchmark module startup overhead (C<< bencher -m $scenario_name --module-startup >>):\n\n #table$table_num#\n", $fres, "\n\n";
             push @pod, __html_result($bench_res2, $table_num) if $self->gen_html_tables;
             $self->_gen_chart($tempdir, $input, \@pod, $bench_res2, $table_num);
-            $table_num++;
+        }
+
+        if ($table_num) {
+            push @pod, "To display as an interactive HTML table on a browser, you can add option C<--format html+datatables>.\n\n";
         }
 
         $self->add_text_to_section(
