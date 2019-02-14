@@ -141,8 +141,9 @@ sub _process_scenario_module {
 
     my $tempdir = File::Temp::tempdir(CLEANUP=>1);
 
+    my $raw_scenario = ${"$package\::scenario"};
     my $scenario = Bencher::Backend::parse_scenario(
-        scenario => ${"$package\::scenario"});
+        scenario => $raw_scenario);
 
     my $scenario_name = $package;
     $scenario_name =~ s/\ABencher::Scenario:://;
@@ -418,12 +419,23 @@ sub _process_scenario_module {
         my @pod;
 
         push @pod, "=over\n\n";
+
         for my $ds (@{ $scenario->{datasets} }) {
             push @pod, "=item * $ds->{name}";
             push @pod, " [".join(", ", @{$ds->{tags}})."]" if $ds->{tags};
             push @pod, "\n\n";
             push @pod, "$ds->{summary}\n\n" if $ds->{summary};
         }
+
+        # also mentions datasets not included by default. get it from the raw
+        # scenario as this is trimmed from the parsed scenario (as to why, i
+        # didn't remember).
+        for my $ds (@{ $raw_scenario->{datasets} }) {
+            next unless defined $ds->{include_by_default} && !$ds->{include_by_default};
+            next unless defined $ds->{name};
+            push @pod, "=item * $ds->{name} (not included by default)\n\n";
+        }
+
         push @pod, "=back\n\n";
 
         $self->add_text_to_section(
