@@ -467,7 +467,6 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
 
     # create Bencher::ScenarioR::* modules
     {
-        require Data::Dump;
         require Dist::Zilla::File::InMemory;
         my ($rname, $rpkg, $nsname);
         if ($is_cpanmodules) {
@@ -483,6 +482,7 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
             name => $rname,
             content => join(
                 "",
+                "## no critic\n",
                 "package $rpkg;\n",
                 "\n",
 
@@ -492,7 +492,7 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
 
                 "\n",
 
-                "our \$results = ", Data::Dump::dump(\@bench_res), ";\n",
+                "our \$results = ", dmp(\@bench_res), ";\n",
                 "\n",
 
                 "1;\n",
