@@ -1,4 +1,4 @@
-0.241   2019-02-24 (PERLANCAR) (unreleased)
+0.241   2019-02-24 (PERLANCAR)
 
 	- Support getting scenario from Acme::CPANModules::* module.
 
