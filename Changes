@@ -1,3 +1,8 @@
+0.240   2019-02-24 (PERLANCAR)
+
+	- Support getting scenario from Acme::CPANModules::* module.
+
+
 0.23    2017-01-04 (PERLANCAR)
 
 	- Add hint to use --format html+datatables.
