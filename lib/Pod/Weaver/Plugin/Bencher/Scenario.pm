@@ -141,10 +141,10 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
 
     my $tempdir = File::Temp::tempdir(CLEANUP=>1);
 
-    my ($scenario, $scenario_name, $is_cpanmodules, $cpanmodules_name);
-
+    my ($raw_scenario, $scenario, $scenario_name, $is_cpanmodules, $cpanmodules_name);
     if ($package =~ /\ABencher::Scenario::/) {
         ($scenario_name = $package) =~ s/\ABencher::Scenario:://;
+        $raw_scenario = ${"$package\::scenario"};
         $scenario = Bencher::Backend::parse_scenario(
             scenario => ${"$package\::scenario"});
     } else {
@@ -156,6 +156,7 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
             cpanmodule => $cpanmodules_name);
         $self->log_fatal(["Can't extract scenario from %s: %s", $package, $res])
             unless $res->[0] == 200;
+        $raw_scenario = $res->[2];
         $scenario = Bencher::Backend::parse_scenario(
             scenario => $res->[2]);
     }
@@ -438,12 +439,23 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
         my @pod;
 
         push @pod, "=over\n\n";
+
         for my $ds (@{ $scenario->{datasets} }) {
             push @pod, "=item * $ds->{name}";
             push @pod, " [".join(", ", @{$ds->{tags}})."]" if $ds->{tags};
             push @pod, "\n\n";
             push @pod, "$ds->{summary}\n\n" if $ds->{summary};
         }
+
+        # also mentions datasets not included by default. get it from the raw
+        # scenario as this is trimmed from the parsed scenario (as to why, i
+        # didn't remember).
+        for my $ds (@{ $raw_scenario->{datasets} }) {
+            next unless defined $ds->{include_by_default} && !$ds->{include_by_default};
+            next unless defined $ds->{name};
+            push @pod, "=item * $ds->{name} (not included by default)\n\n";
+        }
+
         push @pod, "=back\n\n";
 
         $self->add_text_to_section(

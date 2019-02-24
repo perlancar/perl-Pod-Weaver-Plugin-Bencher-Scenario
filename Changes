@@ -1,6 +1,11 @@
-0.240   2019-02-24 (PERLANCAR)
+0.241   2019-02-24 (PERLANCAR) (unreleased)
 
 	- Support getting scenario from Acme::CPANModules::* module.
+
+
+0.240   2019-02-15 (PERLANCAR)
+
+	- Mention datasets not included by default.
 
 
 0.23    2017-01-04 (PERLANCAR)
