@@ -574,7 +574,7 @@ sub weave_section {
     my $package;
     if ($filename =~ m!^lib/(?:(Acme/CPANModules/.+)|(Bencher/Scenario/.+))\.pm$!) {
         {
-            $package = $1;
+            $package = $1 // $2;
             $package =~ s!/!::!g;
             if ($self->include_module && @{ $self->include_module }) {
                 last unless grep {$_ eq $package || "Bencher::Scenario::$_" eq $package || "Acme::CPANModules::$_" eq $package} @{ $self->include_module };
