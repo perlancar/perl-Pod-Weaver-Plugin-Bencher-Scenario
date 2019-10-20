@@ -1,3 +1,10 @@
+0.244   2019-10-20  Released-By: PERLANCAR; Urgency: medium
+
+	- [bugfix] Avoid creating lib/Bencher/ScenarioR/ file multiple
+	  times if multiple benchmarks are produced (e.g. with multiple
+	  instances in weaver.ini).
+
+
 0.243   2019-03-24  Released-By: PERLANCAR
 
 	- [bugfix] Failed to retrieve package name for
