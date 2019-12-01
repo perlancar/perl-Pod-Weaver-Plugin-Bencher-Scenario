@@ -620,7 +620,7 @@ This plugin is to be used when building C<Bencher::Scenario::*> distribution. It
 can also be used for C<Acme::CPANModules::*> distribution which contain
 benchmarking information. Currently it does the following:
 
-For each C<lib/Bencher/Scenario/*> or C<lib/Acme/CPANModules/*> module files:
+For each C<lib/Bencher/Scenario/*> or C<lib/Acme/CPANModules/*> module file:
 
 =over
 
@@ -651,7 +651,7 @@ alternatives.
 
 =back
 
-For each C<lib/Bencher/Scenarios/*> module files:
+For each C<lib/Bencher/Scenarios/*> module file:
 
 =over
 
