@@ -508,8 +508,12 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
         $file->_set_added_by(
             sprintf("%s (%s line %s)", __PACKAGE__, __PACKAGE__, __LINE__),
         );
-        push @{ $zilla->files }, $file;
-        $self->log(["Creating file '%s'", $rname]);
+        if (grep { $_->name eq $rname } @{ $zilla->files }) {
+            $self->log("File $rname already exists (probably by another instance of ".__PACKAGE__.", not adding another one");
+        } else {
+            $self->log(["Creating file '%s'", $rname]);
+            push @{ $zilla->files }, $file;
+        }
     }
 
     $self->log(["Generated POD for '%s'", $filename]);
