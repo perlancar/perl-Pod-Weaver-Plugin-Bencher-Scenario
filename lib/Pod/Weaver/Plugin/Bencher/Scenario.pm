@@ -401,7 +401,8 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
             push @pod, " [".join(", ", @{$p0->{tags}})."]" if $p0->{tags};
             push @pod, "\n\n";
             if ($p0->{summary}) {
-                push @pod, $p0->{summary}, ".\n\n";
+                require String::PodQuote;
+                push @pod, String::PodQuote::pod_quote($p0->{summary}), ".\n\n";
             }
             if ($p->{cmdline}) {
                 push @pod, "Command line:\n\n", " $p->{cmdline}\n\n";
