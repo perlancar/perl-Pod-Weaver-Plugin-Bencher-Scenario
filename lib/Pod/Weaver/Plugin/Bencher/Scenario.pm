@@ -424,10 +424,10 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
                 push @pod, "\n\n";
             }
 
-            if ($p->{description}) {
+            if ($p0->{description}) {
                 require Markdown::To::POD;
                 my $pod = Markdown::To::POD::markdown_to_pod(
-                    $p->{description});
+                    $p0->{description});
                 push @pod, $pod, "\n\n";
             }
 
