@@ -404,6 +404,7 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
                 require String::PodQuote;
                 push @pod, String::PodQuote::pod_quote($p0->{summary}), ".\n\n";
             }
+
             if ($p->{cmdline}) {
                 push @pod, "Command line:\n\n", " $p->{cmdline}\n\n";
             } elsif ($p0->{cmdline_template}) {
@@ -422,6 +423,14 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
                 }
                 push @pod, "\n\n";
             }
+
+            if ($p->{description}) {
+                require Markdown::To::POD;
+                my $pod = Markdown::To::POD::markdown_to_pod(
+                    $p->{description});
+                push @pod, $pod, "\n\n";
+            }
+
             push @pod, "\n\n";
         }
         push @pod, "=back\n\n";
@@ -445,7 +454,16 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
             push @pod, "=item * $ds->{name}";
             push @pod, " [".join(", ", @{$ds->{tags}})."]" if $ds->{tags};
             push @pod, "\n\n";
-            push @pod, "$ds->{summary}\n\n" if $ds->{summary};
+            if (defined $ds->{summary}) {
+                require String::PodQuote;
+                push @pod, String::PodQuote::pod_quote($ds->{summary}), ".\n\n";
+            }
+            if ($ds->{description}) {
+                require Markdown::To::POD;
+                my $pod = Markdown::To::POD::markdown_to_pod(
+                    $ds->{description});
+                push @pod, $pod, "\n\n";
+            }
         }
 
         # also mentions datasets not included by default. get it from the raw
