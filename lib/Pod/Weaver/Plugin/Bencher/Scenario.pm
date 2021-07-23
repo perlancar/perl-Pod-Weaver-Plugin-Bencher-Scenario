@@ -308,6 +308,11 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
                     $fres =~ s/^/ /gm;
                     $table_num++;
                     push @pod, " #table$table_num#\n", " ", dmp($split_item->[0]), "\n$fres\n";
+                    {
+                        $fres = Bencher::Backend::format_result($split_item->[1], undef, {render_as_benchmark_pm=>1});
+                        $fres =~ s/^/ /gm;
+                        push @pod, "Formatted as L<Benchmark.pm|Benchmark> result:\n\n$fres\n";
+                    }
                     push @pod, __html_result($bench_res, $table_num) if $self->gen_html_tables;
                     $self->_gen_chart($tempdir, $input, \@pod, $split_item->[1], $table_num);
                     push @bench_res, $split_item->[1];
@@ -318,6 +323,11 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
                 $fres =~ s/^/ /gm;
                 $table_num++;
                 push @pod, "$bench->{title}:\n\n #table$table_num#\n$fres\n\n";
+                {
+                    $fres = Bencher::Backend::format_result($bench_res, undef, {render_as_benchmark_pm=>1});
+                    $fres =~ s/^/ /gm;
+                    push @pod, "Formatted as L<Benchmark.pm|Benchmark> result:\n\n$fres\n";
+                }
                 push @pod, __html_result($bench_res, $table_num) if $self->gen_html_tables;
                 $self->_gen_chart($tempdir, $input, \@pod, $bench_res, $table_num);
                 push @bench_res, $bench_res;
@@ -336,6 +346,11 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
             $fres =~ s/^/ /gm;
             $table_num++;
             push @pod, "Benchmark module startup overhead (C<< bencher ".($is_cpanmodules ? "--cpanmodules-module $cpanmodules_name" : "-m $scenario_name")." --module-startup >>):\n\n #table$table_num#\n", $fres, "\n\n";
+            {
+                $fres = Bencher::Backend::format_result($bench_res2, undef, {render_as_benchmark_pm=>1});
+                $fres =~ s/^/ /gm;
+                push @pod, "Formatted as L<Benchmark.pm|Benchmark> result:\n\n$fres\n";
+            }
             push @pod, __html_result($bench_res2, $table_num) if $self->gen_html_tables;
             $self->_gen_chart($tempdir, $input, \@pod, $bench_res2, $table_num);
         }
