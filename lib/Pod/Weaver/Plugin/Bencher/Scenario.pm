@@ -271,8 +271,12 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
 
         my $i = -1;
         my $first_run_on;
+        my $sample_bench_num = 0;
         for my $bench (@$sample_benches) {
             $i++;
+            $sample_bench_num++;
+
+            push @pod, "=head2 Sample benchmark #$sample_bench_num\n\n";
 
             my $bench_res;
             if ($bench->{result}) {
@@ -339,6 +343,9 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
         } # for sample_benches
 
         if ($self->bench_startup && @modules && !$scenario->{module_startup}) {
+            $sample_bench_num++;
+            push @pod, "=head2 Sample benchmark #$sample_bench_num\n\n";
+
             $self->log(["Running module_startup benchmark of scenario $package"]);
             my $bench_res2 = Bencher::Backend::bencher(
                 action => 'bench',
@@ -349,7 +356,8 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
             $fres = Bencher::Backend::format_result($bench_res2);
             $fres =~ s/^/ /gm;
             $table_num++;
-            push @pod, "Benchmark module startup overhead (C<< bencher ".($is_cpanmodules ? "--cpanmodules-module $cpanmodules_name" : "-m $scenario_name")." --module-startup >>):\n\n";
+            push @pod, "Benchmark command (benchmarking module startup overhead):\n\n";
+            push @pod, " % bencher ".($is_cpanmodules ? "--cpanmodules-module $cpanmodules_name" : "-m $scenario_name")." --module-startup\n\n";
             push @pod, "Result formatted as table:\n\n";
             push @pod, " #table$table_num#\n", $fres, "\n\n";
             {
