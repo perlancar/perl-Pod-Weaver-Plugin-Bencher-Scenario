@@ -105,6 +105,7 @@ sub _gen_chart {
                     $table_num, $output_file]);
     }
 
+    push @$pod, "The above result presented as chart:\n\n";
     push @$pod, "#IMAGE: $build_file|$output_file\n\n";
 
     # this is very very dirty. we mark that we have created some chart files in
@@ -247,14 +248,9 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
                     $self->log_fatal(["Invalid sample_bench[$i] specification: invalid args: %s - %s", $cres->[0], $cres->[1]])
                         unless $cres->[0] == 200;
                     my $cmd = "C<< bencher ".($is_cpanmodules ? "--cpanmodules-module $cpanmodules_name" : "-m $scenario_name")." ".join(" ", map {shell_quote($_)} @{$cres->[2]})." >>";
-                    if ($res->{title}) {
-                        $res->{title} .= " ($cmd)";
-                    } else {
-                        $res->{title} = "Benchmark with $cmd";
-                    }
+                    $res->{cmdline} = $cmd;
                 } elsif ($res->{file}) {
                     $res->{result} = decode_json(read_text($res->{file}));
-                    $res->{title} //= "(no title)";
                 } else {
                     $self->log_fatal(["Invalid sample_bench[$i] specification: no args/file specified"]);
                 }
@@ -263,7 +259,11 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
             }
         } else {
             $sample_benches = [
-                {title=>"Benchmark with default options (C<< bencher ".($is_cpanmodules ? "--cpanmodules-module $cpanmodules_name" : "-m $scenario_name")." >>)", args=>{}},
+                {
+                    cmdline => "bencher ".($is_cpanmodules ? "--cpanmodules-module $cpanmodules_name" : "-m $scenario_name"),
+                    cmdline_comment => 'default options',
+                    args=>{},
+                },
             ];
         }
 
@@ -280,7 +280,7 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
                 if ($i > 0) {
                     my $run_on = __render_run_on($bench_res);
                     if ($run_on ne $first_run_on) {
-                        $bench->{title} .= " ($run_on)";
+                        $bench->{cmdline_comment} = $run_on;
                     }
                 }
             } else {
@@ -303,19 +303,19 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
                     $bench_res, [split /\s*[,;]\s*|\s+/, $self->result_split_fields]);
                 for my $k (0..$#{$split_bench_res}) {
                     my $split_item = $split_bench_res->[$k];
-                    if ($k == 0) { push @pod, "$bench->{title}:\n\n" }
+                    if ($k == 0) { push @pod, "Benchmark command".($bench->{cmdline_comment} ? " ($bench->{cmdline_comment})" : "").":\n\n % $bench->{cmdline}\n\n" }
                     my $fres = Bencher::Backend::format_result($split_item->[1]);
                     $fres =~ s/^/ /gm;
                     $table_num++;
-                    push @pod, "Result formatted as table:\n\n";
+                    my $split_note = @$split_bench_res > 1 ? " (split, part ".($k+1)." of ".(@$split_bench_res+0).")" : "";
+                    push @pod, "Result formatted as table$split_note:\n\n";
                     push @pod, " #table$table_num#\n", " ", dmp($split_item->[0]), "\n$fres\n";
                     {
                         $fres = Bencher::Backend::format_result($split_item->[1], undef, {render_as_benchmark_pm=>1});
                         $fres =~ s/^/ /gm;
-                        push @pod, "Result formatted in L<Benchmark.pm|Benchmark> style:\n\n$fres\n";
+                        push @pod, "The above result formatted in L<Benchmark.pm|Benchmark> style:\n\n$fres\n";
                     }
                     push @pod, __html_result($bench_res, $table_num) if $self->gen_html_tables;
-                    push @pod, "Result presented as chart:\n\n";
                     $self->_gen_chart($tempdir, $input, \@pod, $split_item->[1], $table_num);
                     push @bench_res, $split_item->[1];
                 }
@@ -324,16 +324,15 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
                 my $fres = Bencher::Backend::format_result($bench_res);
                 $fres =~ s/^/ /gm;
                 $table_num++;
-                push @pod, "$bench->{title}:\n\n";
+                push @pod, "Benchmark command".($bench->{cmdline_comment} ? " ($bench->{cmdline_comment})" : "").":\n\n % $bench->{cmdline}\n\n";
                 push @pod, "Result formatted as table:\n\n";
                 push @pod, " #table$table_num#\n$fres\n\n";
                 {
                     $fres = Bencher::Backend::format_result($bench_res, undef, {render_as_benchmark_pm=>1});
                     $fres =~ s/^/ /gm;
-                    push @pod, "Result formatted in L<Benchmark.pm|Benchmark> style:\n\n$fres\n";
+                    push @pod, "The above result formatted in L<Benchmark.pm|Benchmark> style:\n\n$fres\n";
                 }
                 push @pod, __html_result($bench_res, $table_num) if $self->gen_html_tables;
-                push @pod, "Result presented as chart:\n\n";
                 $self->_gen_chart($tempdir, $input, \@pod, $bench_res, $table_num);
                 push @bench_res, $bench_res;
             }
@@ -356,10 +355,9 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
             {
                 $fres = Bencher::Backend::format_result($bench_res2, undef, {render_as_benchmark_pm=>1});
                 $fres =~ s/^/ /gm;
-                push @pod, "Result formatted in L<Benchmark.pm|Benchmark> style:\n\n$fres\n";
+                push @pod, "The above result formatted in L<Benchmark.pm|Benchmark> style:\n\n$fres\n";
             }
             push @pod, __html_result($bench_res2, $table_num) if $self->gen_html_tables;
-            push @pod, "Result presented as chart:\n\n";
             $self->_gen_chart($tempdir, $input, \@pod, $bench_res2, $table_num);
         }
 
