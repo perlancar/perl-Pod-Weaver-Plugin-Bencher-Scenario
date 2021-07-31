@@ -8,6 +8,9 @@
 
 	- More tweaks to generated text.
 
+        - [incompatible change] Change sample_bench expected structure: title is
+          changed to cmdline_comment.
+
 
 0.249   2021-07-31  Released-By: PERLANCAR; Urgency: medium
 
