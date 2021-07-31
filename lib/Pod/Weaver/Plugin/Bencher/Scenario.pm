@@ -223,7 +223,7 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
 
     my @modules = Bencher::Backend::_get_participant_modules($scenario);
 
-    # add Sample Benchmark Results section
+    # add Benchmark Sample Results section
     my @bench_res;
     my $table_num = 0;
     {
@@ -368,7 +368,7 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
         }
 
         $self->add_text_to_section(
-            $document, join("", @pod), 'SAMPLE BENCHMARK RESULTS',
+            $document, join("", @pod), 'BENCHMARK SAMPLE RESULTS',
             {
                 after_section => ['BENCHMARKED MODULES', 'SYNOPSIS'],
                 before_section => 'DESCRIPTION',
@@ -410,7 +410,7 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
             $document, join("", @pod), 'BENCHMARKED MODULES',
             {
                 after_section => 'SYNOPSIS',
-                before_section => ['SAMPLE BENCHMARK RESULTS', 'DESCRIPTION'],
+                before_section => ['BENCHMARK SAMPLE RESULTS', 'DESCRIPTION'],
             });
     }
 
@@ -470,7 +470,7 @@ sub _process_bencher_scenario_or_acme_cpanmodules_module {
             $document, join("", @pod), 'BENCHMARK PARTICIPANTS',
             {
                 after_section => ['BENCHMARKED MODULES'],
-                before_section => ['SAMPLE BENCHMARK RESULTS'],
+                before_section => ['BENCHMARK SAMPLE RESULTS'],
             });
     }
 
@@ -693,7 +693,7 @@ Only for C<lib/Bencher/Scenario/*> module files.
 
 =item * Add a Benchmark Participants section containing list of participants from the scenario
 
-=item * Add a Sample Benchmark Results containing result from a bencher run
+=item * Add a Benchmark Sample Results containing result from a bencher run
 
 Both normal benchmark and a separate module startup benchmark (if eligible) are
 run and shown.
@@ -702,7 +702,7 @@ run and shown.
 
 =item * Create C<lib/Bencher/ScenarioR/*> or C<lib/Acme/CPANModules_ScenarioR/*> module files that contain sample benchmark result data
 
-These module files contain the raw data, while the Sample Benchmark Results POD
+These module files contain the raw data, while the Benchmark Sample Results POD
 section of the scenario module contains the formatted result. The raw data might
 be useful later. For example I'm thinking of adding a utility later, perhaps in
 the form of an L<lcpan> subcommand, that can guess whether a module is
