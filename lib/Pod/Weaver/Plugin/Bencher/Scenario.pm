@@ -757,10 +757,10 @@ already excluded.
 
 =head2 sample_bench+ => hash
 
-Add a sample benchmark. Value is a hash which can contain these keys: C<title>
-(specify title for the benchmark), C<args> (hash arguments for bencher()) or
-C<file> (instead of running bencher(), use the result from JSON file). Can be
-specified multiple times.
+Add a sample benchmark. Value is a hash which can contain these keys:
+C<cmdline_comment> (specify commenttitle for the benchmark command), C<args>
+(hash arguments for bencher()) or C<file> (instead of running bencher(), use the
+result from JSON file). Can be specified multiple times.
 
 =head2 bench => bool (default: 1)
 
